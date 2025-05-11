@@ -1,8 +1,11 @@
 import { EditVendorInputs, VendorLoginInputs } from "../dto";
+import { CreateFoodInput } from "../dto/food.dto";
+import { Food } from "../models";
 import { GenerateSignature, ValidatePassword } from "../utility";
 import { FindVendor } from "./Admin-Controller";
 
 import { Request, Response, NextFunction } from "express";
+import { getFoodById, } from "./food-controller";
 
 export const VendorsLogin = async (
 	req: Request,
@@ -88,4 +91,83 @@ export const UpdateVendorService = async(req:Request, res:Response, next:NextFun
 	} else {
 		 res.status(400).json({ message: "Vendor not found" });
 	}
+}
+
+
+
+
+
+export const AddFood = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  console.log('...creating food');
+
+  // Check if user is authenticated
+  const user = req.user;
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+    return;
+  }
+
+  try {
+    const { name, description, category, foodType, readyTime, price } = <CreateFoodInput>req.body;
+
+    const vendor = await FindVendor(user._id);
+    if (!vendor) {
+      res.status(404).json({ message: 'Vendor not found' });
+      return;
+    }
+
+    // Create new food item
+    const createdFood = await Food.create({
+      vendorId: vendor._id,
+      name,
+      description,
+      category,
+      foodType,
+      images: ['mock.jpg'],
+      readyTime,
+      price,
+      rating: 0,
+    });
+
+    // Add food to vendor's foods array and save
+    vendor.foods.push(createdFood);
+    const result = await vendor.save();
+console.log('food result', result)
+    // Send success response
+    res.json(result);
+  } catch (error) {
+    console.error('Error adding food:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+export const GetFoodById = async(req:Request, res:Response, next:NextFunction)=>{
+try{
+	const foodId= req.params.id
+	console.log("fetched the foodid",foodId)
+	const food = await getFoodById(foodId)
+	if(!food){
+		res.status(400).json({message:"food not found"})
+	}else{
+		res.status(200).json(food)
+	}
+}catch(error){
+	console.log("error when finding the food", error)
+	res.status(500).json({message: 'internal serer error'})
+}
+}
+
+export const GetFoods = async (req:Request, res:Response, next:NextFunction)=>{
+	const user = req.user;
+	if (!user) {
+	  res.status(401).json({ message: 'Unauthorized: User not authenticated' });
+	  return;
+	}
+const food = await Food.find({vendorId:user._id})
+if(food!==null){
+	res.status(200).json(food)
+	return
+} 
+res.json({message:"food not found"})
 }

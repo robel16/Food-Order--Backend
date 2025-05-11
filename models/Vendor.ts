@@ -13,14 +13,14 @@ interface VendorDoc extends Document{
     serviceAvailable:boolean;
     coverImages: [string];
     rating: number;
-    // foods: any;
+    foods: any;
 }
 
 
 const VendorSchema= new Schema({
     name: {type: String, required:true},
     ownerName:{type: String, required:true},
-    foodType: {type: String},
+    foodType: [{type: String, required:true}],
     pinCode:{type: String, required:true},
     address:{type: String},
     phone:{type: String, required:true},
@@ -30,16 +30,16 @@ const VendorSchema= new Schema({
     serviceAvailable:{type:Boolean},
     coverImages: {type: [String]},
     rating: {type: Number},
-    // foods:[{
-    //     type: mongoose.SchemaTypes.ObjectId,
-    //     ref: 'food'
-    // }]
+    foods:[{
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'food'
+    }]
 },{
     toJSON:{
         transform(doc,ret){
             delete ret.password;
             delete ret.salt;
-            delete ret._v;
+            delete ret.__v;
             delete ret.createdAt;
             delete ret.updatedAt;
         }

@@ -1,1 +1,2 @@
-export * from './Vendors'
+export * from './Vendor'
+export * from './food'

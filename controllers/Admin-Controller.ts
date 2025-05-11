@@ -44,6 +44,7 @@ export const Createvendor = async (
 			rating: 0,
 			serviceAvailable: false,
 			coverImages: [],
+			foods:[]
 		});
 		res.status(200).json({ message: "vendor created successfully" });
 	} else {
