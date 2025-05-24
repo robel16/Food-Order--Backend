@@ -17,6 +17,7 @@ export const VendorsLogin = async (
 
 try{
     const existingVendor = await FindVendor("", email);
+	console.log('existing user', existingVendor)
 	if (existingVendor !== null) {
 		const validation = await ValidatePassword(
 			password,
@@ -30,6 +31,7 @@ try{
 				name: existingVendor.name,
 				foodType: existingVendor.foodType,
 			})
+			console.log("this is the signature", signature)
 			 res.json({ signature });
 		}
 	} 
@@ -93,6 +95,28 @@ export const UpdateVendorService = async(req:Request, res:Response, next:NextFun
 	}
 }
 
+export const UpdateVendorCoverImage = async(
+	req: Request,
+	res: Response,
+	next: NextFunction)=>{
+
+  const user = req.user
+if(user){
+	const vendor = await FindVendor(user._id)
+	if(vendor !== null){
+		const files = req.files as  Express.Multer.File [] || []
+	  if(!Array.isArray(files) || files.length === 0){
+		res.status(400).json({message: "No files to upload"})
+	  } ;
+		const images = files.map((file:Express.Multer.File)=> file.filename);
+		vendor.coverImages.push(...images);
+		const result = await vendor.save()
+	 console.log("result:", result)
+	res.json(result)
+	}
+}
+ res.status(400).json({"message": "something went wrong"})
+}
 
 
 
@@ -111,19 +135,18 @@ export const AddFood = async (req: Request, res: Response, next: NextFunction): 
     const { name, description, category, foodType, readyTime, price } = <CreateFoodInput>req.body;
 
     const vendor = await FindVendor(user._id);
-    if (!vendor) {
-      res.status(404).json({ message: 'Vendor not found' });
-      return;
-    }
+    if (vendor !== null) {
 
-    // Create new food item
-    const createdFood = await Food.create({
+const files = req.files as [Express.Multer.File]
+const images = files.map((files:Express.Multer.File)=>files.filename)
+
+        const createdFood = await Food.create({
       vendorId: vendor._id,
       name,
       description,
       category,
       foodType,
-      images: ['mock.jpg'],
+      images:images,
       readyTime,
       price,
       rating: 0,
@@ -135,6 +158,7 @@ export const AddFood = async (req: Request, res: Response, next: NextFunction): 
 console.log('food result', result)
     // Send success response
     res.json(result);
+    }
   } catch (error) {
     console.error('Error adding food:', error);
     res.status(500).json({ message: 'Internal server error' });

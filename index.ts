@@ -3,9 +3,20 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import { AdminRoute, VendorRoute } from "./routes/index";
 import { MONGO_URI } from "./config";
+import path from "path"
+import fs from "fs";
 const app = express();
+
+
+const imagesDir = path.join(__dirname, "images");
+if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir);
+    console.log("images directory created");
+}
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/images',express.static(path.join(__dirname, 'images')))
+
 app.use("/admin", AdminRoute);
 app.use("/vendor", VendorRoute);
 
